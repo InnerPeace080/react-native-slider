@@ -115,9 +115,9 @@ var Slider = React.createClass({
   },
   getInitialState() {
     return {
-      containerSize: { width: 0, height: 0 },
-      trackSize: { width: 0, height: 0 },
-      thumbSize: { width: 0, height: 0 },
+      containerSize: {},
+      trackSize: {},
+      thumbSize: {},
       previousLeft: 0,
       value: this.props.value,
     };
@@ -178,7 +178,7 @@ var Slider = React.createClass({
     };
 
     if (thumbLeft >= 0 && thumbSize.width >= 0) {
-      minimumTrackStyle.width = thumbLeft + thumbSize.width / 2;
+      minimumTrackStyle.width = thumbLeft ;
     }
 
     var touchOverflowStyle = this._getTouchOverflowStyle();
@@ -186,9 +186,9 @@ var Slider = React.createClass({
     return (
       <View {...other} style={[mainStyles.container, style]} onLayout={this._measureContainer}>
         <View
-          style={[{backgroundColor: maximumTrackTintColor}, mainStyles.track, trackStyle]}
+          style={[{backgroundColor: maximumTrackTintColor}, mainStyles.track, trackStyle,{marginHorizontal:this.state.thumbSize.width/2}]}
           onLayout={this._measureTrack} />
-        <View style={[mainStyles.track, trackStyle, minimumTrackStyle]} />
+        <View style={[mainStyles.track, trackStyle, minimumTrackStyle,{marginHorizontal:this.state.thumbSize.width/2}]} />
         <View
           ref={(thumb) => this.thumb = thumb}
           onLayout={this._measureThumb}
@@ -220,7 +220,11 @@ var Slider = React.createClass({
     return false;
   },
 
-  _handlePanResponderGrant: function(/*e: Object, gestureState: Object*/) {
+  _handlePanResponderGrant: function(e: Object, gestureState: Object) {
+    // console.log('_handlePanResponderGrant');
+    // console.log(e);
+    // console.log('gestureState');
+    // console.log(gestureState);
     this.setState({ previousLeft: this._getThumbLeft(this.state.value) },
       this._fireChangeEvent.bind(this, 'onSlidingStart'));
   },
