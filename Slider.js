@@ -184,7 +184,11 @@ var Slider = React.createClass({
     var touchOverflowStyle = this._getTouchOverflowStyle();
 
     return (
-      <View {...other} style={[mainStyles.container, style]} onLayout={this._measureContainer}>
+      <View
+        {...other}
+        style={[mainStyles.container, style]}
+        onLayout={this._measureContainer}>
+
         <View
           style={[{backgroundColor: maximumTrackTintColor}, mainStyles.track, trackStyle,{marginHorizontal:this.state.thumbSize.width/2}]}
           onLayout={this._measureTrack} />
@@ -221,10 +225,17 @@ var Slider = React.createClass({
   },
 
   _handlePanResponderGrant: function(e: Object, gestureState: Object) {
-    // console.log('_handlePanResponderGrant');
-    // console.log(e);
-    // console.log('gestureState');
-    // console.log(gestureState);
+    // this.setState({ value: this._getValue(gestureState) },
+    //   this._fireChangeEvent.bind(this, 'onValueChange'));
+
+    var length = this.state.trackSize.width ;
+    var thumbLeft = e.nativeEvent.locationX - this.state.trackSize.x ;
+    var ratio = thumbLeft / length;
+    var value = ratio * (this.props.maximumValue - this.props.minimumValue) + this.props.minimumValue;
+
+    this.setState({ value:value },
+      this._fireChangeEvent.bind(this, 'onValueChange'));
+
     this.setState({ previousLeft: this._getThumbLeft(this.state.value) },
       this._fireChangeEvent.bind(this, 'onSlidingStart'));
   },
@@ -238,20 +249,20 @@ var Slider = React.createClass({
   },
 
   _measureContainer(x: Object) {
-    var {width, height} = x.nativeEvent.layout;
-    var containerSize = {width: width, height: height};
+    var {width, height,x} = x.nativeEvent.layout;
+    var containerSize = {width: width, height: height,x:x};
     this.setState({ containerSize: containerSize });
   },
 
   _measureTrack(x: Object) {
-    var {width, height} = x.nativeEvent.layout;
-    var trackSize = {width: width, height: height};
+    var {width, height,x} = x.nativeEvent.layout;
+    var trackSize = {width: width, height: height,x:x};
     this.setState({ trackSize: trackSize });
   },
 
   _measureThumb(x: Object) {
-    var {width, height} = x.nativeEvent.layout;
-    var thumbSize = {width: width, height: height};
+    var {width, height,x} = x.nativeEvent.layout;
+    var thumbSize = {width: width, height: height,x:x};
     this.setState({ thumbSize: thumbSize });
   },
 
@@ -261,11 +272,11 @@ var Slider = React.createClass({
 
   _getThumbLeft(value: number) {
     var ratio = this._getRatio(value);
-    return ratio * (this.state.containerSize.width - this.state.thumbSize.width);
+    return ratio * (this.state.trackSize.width );
   },
 
   _getValue(gestureState: Object) {
-    var length = this.state.containerSize.width - this.state.thumbSize.width;
+    var length = this.state.trackSize.width ;
     var thumbLeft = Math.min(length,
       Math.max(0, this.state.previousLeft + gestureState.dx));
 
@@ -304,8 +315,8 @@ var Slider = React.createClass({
       touchOverflowStyle.marginBottom = verticalMargin;
 
       var horizontalMargin = -width / 2;
-      touchOverflowStyle.marginLeft = horizontalMargin;
-      touchOverflowStyle.marginRight = horizontalMargin;
+      // touchOverflowStyle.marginLeft = horizontalMargin;
+      // touchOverflowStyle.marginRight = horizontalMargin;
     }
 
     if (this.props.debugTouchArea === true) {
