@@ -1,8 +1,12 @@
 {
   "name": "react-native-slider",
-  "version": "0.4.0",
+  "version": "0.9.0",
   "description": "A pure JavaScript <Slider /> component for react-native",
-  "main": "Slider.js",
+  "main": "lib/Slider.js",
+  "files": [
+    "lib",
+    "src"
+  ],
   "author": "Jean Regisser <jean.regisser@gmail.com> (https://github.com/jeanregisser)",
   "keywords": [
     "react-component",
@@ -13,17 +17,26 @@
   ],
   "license": "MIT",
   "scripts": {
-    "start": "node_modules/react-native/packager/packager.sh"
+    "clean": "rimraf lib",
+    "start": "node_modules/react-native/packager/packager.sh",
+    "build": "babel src --out-dir lib",
+    "prepublish": "npm run clean && npm run build"
   },
   "repository": {
     "type": "git",
     "url": "git@github.com:jeanregisser/react-native-slider.git"
   },
   "dependencies": {
+    "react-addons-shallow-compare": "^15.0.2",
+    "style-equal": "^1.0.0"
   },
   "devDependencies": {
+    "babel-cli": "^6.6.5",
     "babel-eslint": "^3.1.15",
     "eslint": "^0.23.0",
-    "eslint-plugin-react": "^2.5.2"
+    "eslint-plugin-react": "^2.5.2",
+    "react": "^15.0.2",
+    "react-native": "^0.26.2",
+    "rimraf": "^2.5.2"
   }
 }
