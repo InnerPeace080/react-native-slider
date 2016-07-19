@@ -169,7 +169,7 @@ var Slider = React.createClass({
   },
   getInitialState() {
     return {
-      containerSize: {width: 0, height: 0},
+      containerSize: {width: 0, height: 0,x:0},
       trackSize: {width: 0, height: 0},
       thumbSize: {width: 0, height: 0},
       allMeasured: false,
@@ -303,7 +303,8 @@ var Slider = React.createClass({
 
   _handleStartShouldSetPanResponder: function(e: Object, /*gestureState: Object*/): boolean {
     // Should we become active when the user presses down on the thumb?
-    return this._thumbHitTest(e);
+    // return this._thumbHitTest(e);
+    return true;
   },
 
   _handleMoveShouldSetPanResponder: function(/*e: Object, gestureState: Object*/): boolean {
@@ -311,8 +312,16 @@ var Slider = React.createClass({
     return false;
   },
 
-  _handlePanResponderGrant: function(/*e: Object, gestureState: Object*/) {
-    this._previousLeft = this._getThumbLeft(this._getCurrentValue());
+  _handlePanResponderGrant: function(e: Object, gestureState: Object) {
+
+    var length = this.state.trackSize.width ;
+    var thumbLeft = e.nativeEvent.locationX - this.state.trackSize.x ;
+    var ratio = thumbLeft / length;
+    var value = ratio * (this.props.maximumValue - this.props.minimumValue) + this.props.minimumValue;
+
+    this._setCurrentValue(value);
+    this._fireChangeEvent('onValueChange');
+
     this._fireChangeEvent('onSlidingStart');
   },
   _handlePanResponderMove: function(e: Object, gestureState: Object) {
@@ -320,7 +329,7 @@ var Slider = React.createClass({
       return;
     }
 
-    this._setCurrentValue(this._getValue(gestureState));
+    this._setCurrentValue(this._getValue(e,gestureState));
     this._fireChangeEvent('onValueChange');
   },
   _handlePanResponderRequestEnd: function(e: Object, gestureState: Object) {
@@ -332,7 +341,7 @@ var Slider = React.createClass({
       return;
     }
 
-    this._setCurrentValue(this._getValue(gestureState));
+    this._setCurrentValue(this._getValue(e,gestureState));
     this._fireChangeEvent('onSlidingComplete');
   },
 
@@ -350,7 +359,7 @@ var Slider = React.createClass({
 
   _handleMeasure(name: string, x: Object) {
     var {width, height} = x.nativeEvent.layout;
-    var size = {width: width, height: height};
+    var size = {width: width, height: height,x:x.nativeEvent.layout.x};
 
     var storeName = `_${name}`;
     var currentSize = this[storeName];
@@ -358,7 +367,6 @@ var Slider = React.createClass({
       return;
     }
     this[storeName] = size;
-
     if (this._containerSize && this._trackSize && this._thumbSize) {
       this.setState({
         containerSize: this._containerSize,
@@ -378,9 +386,13 @@ var Slider = React.createClass({
     return ratio * (this.state.trackSize.width );
   },
 
-  _getValue(gestureState: Object) {
-    var length = this.state.containerSize.width - this.state.thumbSize.width;
-    var thumbLeft = this._previousLeft + gestureState.dx;
+  _getValue(e: Object,gestureState: Object) {
+
+    var length = this.state.trackSize.width ;
+    var thumbLeft = e.nativeEvent.locationX - this.state.trackSize.x ;
+    var ratio = thumbLeft / length;
+
+    thumbLeft += gestureState.dx;
 
     var ratio = thumbLeft / length;
 
@@ -440,7 +452,6 @@ var Slider = React.createClass({
 
   _getTouchOverflowStyle() {
     var {width, height} = this._getTouchOverflowSize();
-
     var touchOverflowStyle = {};
     if (width !== undefined && height !== undefined) {
       var verticalMargin = -height / 2;
