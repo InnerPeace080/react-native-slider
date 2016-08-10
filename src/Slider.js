@@ -77,6 +77,8 @@ var Slider = React.createClass({
      */
     maximumValue: PropTypes.number,
 
+    secondValue: PropTypes.number,
+
     /**
      * Step value of the slider. The value should be between 0 and
      * (maximumValue - minimumValue). Default value is 0.
@@ -98,6 +100,8 @@ var Slider = React.createClass({
      * default blue gradient image.
      */
     maximumTrackTintColor: PropTypes.string,
+
+    secondTrackTintColor: PropTypes.string,
 
     /**
      * The color used for the thumb.
@@ -174,6 +178,7 @@ var Slider = React.createClass({
       thumbSize: {width: 0, height: 0},
       allMeasured: false,
       value: new Animated.Value(this.props.value),
+      secondValue: new Animated.Value(this.props.secondValue),
     };
   },
   getDefaultProps() {
@@ -181,10 +186,12 @@ var Slider = React.createClass({
       value: 0,
       minimumValue: 0,
       maximumValue: 1,
+      secondValue:0,
       trueMaximumValue: undefined,
       step: 0,
       minimumTrackTintColor: '#3f3f3f',
       maximumTrackTintColor: '#b3b3b3',
+      secondTrackTintColor: '#b3b3b3',
       thumbTintColor: '#343434',
       thumbTouchSize: {width: 40, height: 40},
       debugTouchArea: false,
@@ -204,6 +211,7 @@ var Slider = React.createClass({
   },
   componentWillReceiveProps: function(nextProps) {
     var newValue = nextProps.value;
+    var newSecondValue = nextProps.secondValue;
 
     if (this.props.value !== newValue) {
       if (this.props.animateTransitions) {
@@ -211,6 +219,15 @@ var Slider = React.createClass({
       }
       else {
         this._setCurrentValue(newValue);
+      }
+    }
+
+    if (this.props.secondValue !== newSecondValue) {
+      if (this.props.animateTransitions) {
+        this._setCurrentSecondValueAnimated(newSecondValue);
+      }
+      else {
+        this._setCurrentSecondValue(newSecondValue);
       }
     }
   },
@@ -234,6 +251,7 @@ var Slider = React.createClass({
       maximumValue,
       minimumTrackTintColor,
       maximumTrackTintColor,
+      secondTrackTintColor,
       thumbTintColor,
       styles,
       style,
@@ -242,9 +260,14 @@ var Slider = React.createClass({
       debugTouchArea,
       ...other
     } = this.props;
-    var {value, containerSize, trackSize, thumbSize, allMeasured} = this.state;
+    var {value,secondValue, containerSize, trackSize, thumbSize, allMeasured} = this.state;
     var mainStyles = styles || defaultStyles;
     var thumbLeft = value.interpolate({
+        inputRange: [minimumValue, maximumValue],
+        outputRange: [0, containerSize.width - thumbSize.width],
+        //extrapolate: 'clamp',
+      });
+    var secondThumbLeft = secondValue.interpolate({
         inputRange: [minimumValue, maximumValue],
         outputRange: [0, containerSize.width - thumbSize.width],
         //extrapolate: 'clamp',
@@ -253,6 +276,14 @@ var Slider = React.createClass({
     if (!allMeasured) {
       valueVisibleStyle.opacity = 0;
     }
+
+    var secondTrackStyle = {
+      position: 'absolute',
+      width: Animated.add(secondThumbLeft, thumbSize.width / 2),
+      marginTop: -trackSize.height,
+      backgroundColor: secondTrackTintColor,
+      ...valueVisibleStyle
+    };
 
     var minimumTrackStyle = {
       position: 'absolute',
@@ -269,6 +300,7 @@ var Slider = React.createClass({
         <View
           style={[{backgroundColor: maximumTrackTintColor,}, mainStyles.track, trackStyle]}
           onLayout={this._measureTrack} />
+        <Animated.View style={[mainStyles.track, trackStyle, secondTrackStyle]} />
         <Animated.View style={[mainStyles.track, trackStyle, minimumTrackStyle]} />
         <Animated.View
           onLayout={this._measureThumb}
@@ -289,6 +321,7 @@ var Slider = React.createClass({
   _getPropsForComponentUpdate(props) {
     var {
       value,
+      secondValue,
       onValueChange,
       onSlidingStart,
       onSlidingComplete,
@@ -429,6 +462,22 @@ var Slider = React.createClass({
         );
 
     Animated[animationType](this.state.value, animationConfig).start();
+  },
+
+  _setCurrentSecondValue(value: number) {
+    this.state.secondValue.setValue(value);
+  },
+
+  _setCurrentSecondValueAnimated(value: number) {
+    var animationType   = this.props.animationType;
+    var animationConfig = Object.assign(
+          {},
+          DEFAULT_ANIMATION_CONFIGS[animationType],
+          this.props.animationConfig,
+          {toValue : value}
+        );
+
+    Animated[animationType](this.state.secondValue, animationConfig).start();
   },
 
   _fireChangeEvent(event) {
